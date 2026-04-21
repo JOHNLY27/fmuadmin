@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { collection, onSnapshot, addDoc, serverTimestamp, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { Ticket, Plus, Trash2, Calendar, DollarSign, Tag, Zap, Terminal, ShieldCheck } from 'lucide-react';
+import { Ticket, Plus, Trash2, ShieldCheck } from 'lucide-react';
 
 export default function VoucherManagementScreen() {
   const [vouchers, setVouchers] = useState<any[]>([]);

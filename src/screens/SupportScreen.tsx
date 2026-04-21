@@ -1,14 +1,18 @@
 import { useEffect, useState, useRef } from 'react';
-import { collection, onSnapshot, query, where, addDoc, serverTimestamp, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, onSnapshot, updateDoc, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { Users, Mail, Search, MapPin, UserCheck, Bike, MessageSquare, Send, Activity, ShieldCheck, Zap, Terminal, Clock, CornerDownRight } from 'lucide-react';
+import { 
+  Headset, 
+  MessageSquare, 
+  CheckCircle, 
+  AlertTriangle,
+  Send,
+  ExternalLink
+} from 'lucide-react';
 
 export default function SupportScreen() {
-  const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState<'all' | 'user' | 'rider' | 'admin'>('all');
-  const [activeTab, setActiveTab] = useState<'chat' | 'users'>('chat');
+  const [tickets, setTickets] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<'open' | 'resolved'>('open');
 
   // Chat State
   const [supportThreads, setSupportThreads] = useState<any[]>([]);

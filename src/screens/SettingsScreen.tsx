@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Settings, DollarSign, Zap, Shield, Save, RotateCcw } from 'lucide-react';
+import { DollarSign, Shield, Save, RotateCcw } from 'lucide-react';
 import { db } from '../config/firebase';
-import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 export default function SettingsScreen() {
   const [loading, setLoading] = useState(true);
