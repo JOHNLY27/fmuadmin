@@ -14,10 +14,8 @@ import {
   Filter, 
   Trash2, 
   MessageSquare,
-  User,
   ShieldCheck,
-  Calendar,
-  MoreVertical
+  Calendar
 } from 'lucide-react';
 
 export default function RatingsScreen() {

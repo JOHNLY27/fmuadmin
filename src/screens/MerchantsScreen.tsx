@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { Store, Power, Search, MapPin, Star, Clock, Plus, X, Trash2, Tag, Image as ImageIcon } from 'lucide-react';
+import { Store, Power, Search, MapPin, Plus, X, Trash2, Tag, Image as ImageIcon } from 'lucide-react';
 import { 
   subscribeToMerchants, 
   updateMerchantStatus, 
-  toggleMerchantVerification, 
   addMerchant, 
   deleteMerchant,
   updateMerchant,
@@ -91,7 +90,7 @@ export default function MerchantsScreen() {
       if (editingStore) {
         await updateMerchant(editingStore.id, formData);
       } else {
-        await addMerchant(formData);
+        await addMerchant(formData as any);
       }
       setShowModal(false);
     } catch (e) {

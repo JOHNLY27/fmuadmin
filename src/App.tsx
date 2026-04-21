@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { auth } from './config/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { LayoutDashboard, Store, Bike, Headset, Wallet, ShieldCheck, LogOut, Bell, Users, Settings, Star, Ticket } from 'lucide-react';
+import { LayoutDashboard, Store, Bike, Headset, Wallet, LogOut, Bell, Users, Settings, Star, Ticket } from 'lucide-react';
 
 
 

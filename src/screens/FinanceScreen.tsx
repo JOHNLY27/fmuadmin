@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { collection, query, orderBy, limit, where, onSnapshot, writeBatch, doc, serverTimestamp, addDoc } from 'firebase/firestore';
+import { collection, query, orderBy, limit, where, onSnapshot, writeBatch, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { 
-  DollarSign, TrendingUp, Bike, ShoppingBag, CreditCard, 
-  Wallet, Banknote, CheckCircle2, Loader2, ArrowDownCircle, 
-  ArrowUpCircle, AlertCircle, RefreshCw, History
+  Bike, CreditCard, 
+  Banknote, CheckCircle2, Loader2, ArrowDownCircle, 
+  ArrowUpCircle, RefreshCw, History
 } from 'lucide-react';
 
 export default function FinanceScreen() {
