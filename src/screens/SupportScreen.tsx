@@ -1,25 +1,26 @@
 import { useEffect, useState, useRef } from 'react';
-import { collection, onSnapshot, updateDoc, doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { 
-  Headset, 
+  Terminal, 
+  Zap, 
   MessageSquare, 
-  CheckCircle, 
-  AlertTriangle,
-  Send,
-  ExternalLink
+  Send, 
+  Clock, 
+  CornerDownRight 
 } from 'lucide-react';
 
 export default function SupportScreen() {
-  const [tickets, setTickets] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'open' | 'resolved'>('open');
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dbStatus, setDbStatus] = useState('OFFLINE');
+  const [activeTab, setActiveTab ] = useState<'chat' | 'users'>('chat');
 
   // Chat State
   const [supportThreads, setSupportThreads] = useState<any[]>([]);
   const [selectedThread, setSelectedThread] = useState<any>(null);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [replyText, setReplyText] = useState('');
-  const [dbStatus, setDbStatus] = useState('OFFLINE');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -89,6 +90,10 @@ export default function SupportScreen() {
     const u = users.find(u => u.id === userId);
     return u?.name || u?.email || 'Unknown User';
   };
+
+  if (loading) {
+    return <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>INITIALIZING IDENTITY REGISTRY...</div>;
+  }
 
   return (
     <div style={{ backgroundColor: '#0f172a', minHeight: 'calc(100vh - 100px)', padding: '2rem', borderRadius: '1.5rem', color: '#f8fafc', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
@@ -270,10 +275,6 @@ export default function SupportScreen() {
           0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
           70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
           100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
         }
       `}} />
     </div>
