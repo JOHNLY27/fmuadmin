@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { collection, query, orderBy, limit, where, onSnapshot, writeBatch, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, limit, where, onSnapshot, writeBatch, doc, serverTimestamp, increment } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { 
   Bike, CreditCard, 
@@ -11,6 +11,7 @@ export default function FinanceScreen() {
   const [orders, setOrders] = useState<any[]>([]);
   const [riders, setRiders] = useState<any[]>([]);
   const [payouts, setPayouts] = useState<any[]>([]);
+  const [payoutRequests, setPayoutRequests] = useState<any[]>([]);
   const [processing, setProcessing] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'pending' | 'history'>('pending');
 
@@ -31,7 +32,14 @@ export default function FinanceScreen() {
       setPayouts(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
 
-    return () => { unsub1(); unsub2(); unsub3(); };
+    const qRequests = query(collection(db, 'payoutRequests'), where('status', '==', 'pending'));
+    const unsub4 = onSnapshot(qRequests, (snap) => {
+      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      console.log('DEBUG: Payout Requests received:', data);
+      setPayoutRequests(data);
+    });
+
+    return () => { unsub1(); unsub2(); unsub3(); unsub4(); };
   }, []);
 
   const commissionRate = 0.15; // 15%
@@ -50,7 +58,8 @@ export default function FinanceScreen() {
         cashCollected: 0,
         digitalEarned: 0,
         platformCommission: 0,
-        orderIds: []
+        orderIds: [],
+        hasRequestedPayout: false,
       };
     }
 
@@ -63,6 +72,27 @@ export default function FinanceScreen() {
     } else {
       // Digital payment: Admin has the money, owes rider 85%
       rec.digitalEarned += (o.price || 0) * (1 - commissionRate);
+    }
+  });
+
+  // Inject manual payout requests
+  payoutRequests.forEach(req => {
+    if (!riderReconciliation[req.riderId]) {
+      const rider = riders.find(r => r.id === req.riderId);
+      riderReconciliation[req.riderId] = {
+        riderId: req.riderId,
+        name: rider?.name || req.riderName || 'Unknown Agent',
+        phone: rider?.phone || 'N/A',
+        cashCollected: 0,
+        digitalEarned: req.amount || 0, // Base it straight off the request
+        platformCommission: 0,
+        orderIds: [],
+        requestId: req.id,
+        hasRequestedPayout: true
+      };
+    } else {
+      riderReconciliation[req.riderId].hasRequestedPayout = true;
+      riderReconciliation[req.riderId].requestId = req.id;
     }
   });
 
@@ -103,6 +133,27 @@ export default function FinanceScreen() {
         status: 'completed'
       });
 
+      // 3. Resolve the payout request if it exists & Deduct Digital Wallet
+      if (data.requestId) {
+        batch.update(doc(db, 'payoutRequests', data.requestId), {
+          status: 'completed',
+          resolvedAt: serverTimestamp()
+        });
+
+        batch.update(doc(db, 'wallets', riderId), {
+           balance: increment(-Math.abs(amount)),
+           lastUpdated: new Date().toISOString()
+        });
+
+        batch.set(doc(collection(db, 'transactions')), {
+           userId: riderId,
+           amount: Math.abs(amount),
+           type: 'debit',
+           description: 'Digital Payout Processed by Admin',
+           createdAt: new Date().toISOString()
+        });
+      }
+
       await batch.commit();
       alert('Reconciliation successfully committed to chain.');
     } catch (e) {
@@ -127,6 +178,10 @@ export default function FinanceScreen() {
           <p style={{ color: '#64748b', fontWeight: 600, marginTop: '0.25rem' }}>RECONCILING REGIONAL AGENT BALANCES & COD COLLECTIONS</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
+           <div style={{ background: '#f59e0b', padding: '0.75rem 1.25rem', borderRadius: '16px', boxShadow: '0 4px 12px rgba(245,158,11,0.2)', textAlign: 'right', border: '2px solid #fff' }}>
+              <div style={{ fontSize: '0.7rem', fontWeight: 900, color: '#fff', letterSpacing: '0.05em' }}>LIVE SIGNALS</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#fff' }}>{payoutRequests.length} ACTIVE</div>
+           </div>
            <div style={{ background: '#fff', padding: '0.75rem 1.25rem', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', textAlign: 'right' }}>
               <div style={{ fontSize: '0.7rem', fontWeight: 900, color: '#94a3b8', letterSpacing: '0.05em' }}>TODAY'S VOLUME</div>
               <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>₱{todayVolume.toLocaleString()}</div>
@@ -178,6 +233,11 @@ export default function FinanceScreen() {
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
+                    {rec.hasRequestedPayout && (
+                       <div style={{ background: '#f59e0b', color: '#fff', fontSize: '0.6rem', fontWeight: 900, padding: '4px 8px', borderRadius: '6px', marginBottom: '4px', display: 'inline-block' }}>
+                          USER REQUESTED PAYOUT
+                       </div>
+                    )}
                     <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#94a3b8', letterSpacing: '0.05em' }}>CURRENT BALANCE</div>
                     <div style={{ fontSize: '1.5rem', fontWeight: 900, color: riderOwesOffice ? '#ef4444' : '#10b981' }}>
                        {riderOwesOffice ? '-' : '+'}₱{settlementAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
